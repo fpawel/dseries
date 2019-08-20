@@ -45,12 +45,15 @@ ORDER BY created_at`, x.Year, x.Month); err != nil {
 
 func (_ *ChartsSvc) DeletePoints(r DeletePointsRequest, rowsAffected *int64) error {
 
-	lastBuckID := lastBucket().BucketID
+	lastBucket, hasBuckets := lastBucket()
+	if !hasBuckets {
+		return nil
+	}
 
 	if r.BucketID == 0 {
-		r.BucketID = lastBuckID
+		r.BucketID = lastBucket.BucketID
 	}
-	if r.BucketID == lastBuckID {
+	if r.BucketID == lastBucket.BucketID {
 		muPoints.Lock()
 		n := 0
 		for _, x := range currentPoints {
@@ -78,7 +81,7 @@ WHERE bucket_id = ? AND
       value >= ? AND 
       value <= ? AND 
       stored_at >= julianday(?) AND 
-      stored_at <= julianday(?);`, r.BucketID, r.Addr, r.Var,
+      stored_at <= julianday(?);`, r.BucketID, r.Addr, r.VarCode,
 		r.ValueMinimum, r.ValueMaximum,
 		r.TimeMinimum.Time().Format(timeFormat),
 		r.TimeMaximum.Time().Format(timeFormat)).RowsAffected()
@@ -107,7 +110,7 @@ WHERE bucket_id = ?`, bucketID); err != nil {
 		panic(err)
 	}
 
-	if lastBucket().BucketID == bucketID {
+	if b, f := lastBucket(); f && b.BucketID == bucketID {
 		var points3 []point3
 		muPoints.Lock()
 		for _, p := range currentPoints {
@@ -140,7 +143,7 @@ WHERE bucket_id = ?`, bucketID); err != nil {
 type DeletePointsRequest struct {
 	BucketID int64
 	Addr     modbus.Addr
-	Var      modbus.Var
+	VarCode  modbus.Var
 	ValueMinimum,
 	ValueMaximum float64
 	TimeMinimum,
