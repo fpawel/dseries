@@ -43,7 +43,7 @@ ORDER BY created_at`, x.Year, x.Month); err != nil {
 	return nil
 }
 
-func (_ *ChartsSvc) DeletePoints(r deletePointsRequest, rowsAffected *int64) error {
+func (_ *ChartsSvc) DeletePoints(r DeletePointsRequest, rowsAffected *int64) error {
 
 	lastBuckID := lastBucket().BucketID
 
@@ -137,8 +137,7 @@ WHERE bucket_id = ?`, bucketID); err != nil {
 	}
 }
 
-
-type deletePointsRequest struct {
+type DeletePointsRequest struct {
 	BucketID int64
 	Addr     modbus.Addr
 	Var      modbus.Var
@@ -147,4 +146,3 @@ type deletePointsRequest struct {
 	TimeMinimum,
 	TimeMaximum TimeDelphi
 }
-
