@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-//go:generate go run github.com/fpawel/goutils/dbutils/sqlstr/...
+//go:generate go run github.com/fpawel/gohelp/cmd/sqlstr/...
 
 func Open(fileName string) {
 	db = gohelp.OpenSqliteDBx(fileName)

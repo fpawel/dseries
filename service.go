@@ -28,12 +28,12 @@ type ChartsBucket struct {
 	Minute   int    `db:"minute"`
 	BucketID int64  `db:"bucket_id"`
 	Name     string `db:"name"`
-	Last     bool   `db:"last"`
+	IsLast   bool   `db:"is_last"`
 }
 
 func (_ *ChartsSvc) BucketsOfYearMonth(x YearMonth, r *[]ChartsBucket) error {
 	if err := db.Select(r, `
-SELECT day, hour, minute, bucket_id, name, bucket_id = (SELECT bucket_id FROM last_bucket) AS last
+SELECT day, hour, minute, bucket_id, name, is_last
 FROM bucket_time
 WHERE year = ?
   AND month = ?

@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-
-
 type TimeDelphi struct {
 	Year        int        `db:"year"`
 	Month       time.Month `db:"month"`
@@ -45,6 +43,7 @@ type bucket struct {
 	Year      int        `db:"year"`
 	Month     time.Month `db:"month"`
 	Day       int        `db:"day"`
+	IsLast    bool       `db:"is_last"`
 }
 
 type point struct {

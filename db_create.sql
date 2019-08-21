@@ -4,9 +4,9 @@ PRAGMA encoding = 'UTF-8';
 CREATE TABLE IF NOT EXISTS bucket
 (
     bucket_id  INTEGER   NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL CHECK ( typeof(name) = 'text' AND length(name) > 0 ),
-    created_at TIMESTAMP NOT NULL UNIQUE DEFAULT (datetime('now', '+3 hours')),
-    updated_at TIMESTAMP NOT NULL        DEFAULT (datetime('now', '+3 hours'))
+    name       TEXT      NOT NULL CHECK ( typeof(name) = 'text' AND length(name) > 0 ),
+    created_at TIMESTAMP NOT NULL UNIQUE DEFAULT (datetime('now')),
+    updated_at TIMESTAMP NOT NULL        DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS series
@@ -26,19 +26,31 @@ CREATE TRIGGER IF NOT EXISTS trigger_bucket_updated_at
     FOR EACH ROW
 BEGIN
     UPDATE bucket
-    SET updated_at = datetime('now', '+3 hours')
+    SET updated_at = datetime('now')
     WHERE bucket.bucket_id = new.bucket_id;
 END;
 
-
+DROP VIEW IF EXISTS bucket_time;
 CREATE VIEW IF NOT EXISTS bucket_time AS
-SELECT *,
-       cast(strftime('%Y', created_at) AS INT) AS year,
-       cast(strftime('%m', created_at) AS INT) AS month,
-       cast(strftime('%d', created_at) AS INT) AS day,
-       cast(strftime('%H', created_at) AS INTEGER) AS hour,
-       cast(strftime('%M', created_at) AS INTEGER) AS minute
-FROM bucket;
+    WITH last_bucket AS (
+        SELECT bucket_id
+        FROM bucket
+        ORDER BY created_at DESC
+        LIMIT 1)
+    SELECT *,
+           cast(strftime('%Y', created_at, '+3 hours') AS INTEGER) AS year,
+           cast(strftime('%m', created_at, '+3 hours') AS INTEGER) AS month,
+           cast(strftime('%d', created_at, '+3 hours') AS INTEGER) AS day,
+           cast(strftime('%H', created_at, '+3 hours') AS INTEGER) AS hour,
+           cast(strftime('%M', created_at, '+3 hours') AS INTEGER) AS minute,
+           bucket_id = (SELECT bucket_id FROM last_bucket)         AS is_last
+    FROM bucket;
+
+CREATE VIEW IF NOT EXISTS last_bucket AS
+SELECT *
+FROM bucket_time
+ORDER BY created_at DESC
+LIMIT 1;
 
 CREATE VIEW IF NOT EXISTS series_time1 AS
 SELECT *,
@@ -59,11 +71,7 @@ SELECT *,
        cast((second_real - second) * 1000 AS INTEGER) AS millisecond
 FROM series_time2;
 
-CREATE VIEW IF NOT EXISTS last_bucket AS
-SELECT *
-FROM bucket_time
-ORDER BY created_at DESC
-LIMIT 1;
+
 
 
 --SELECT datetime((julianday(current_timestamp)));
